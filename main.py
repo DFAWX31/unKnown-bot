@@ -1,27 +1,84 @@
+from dis import dis
 from unicodedata import name
 import discord
 import config
+from bot_commands.test import TestCog
 
 from discord.ext import commands
 
-bot = commands.Bot(command_prefix=config.PREFIX)
-
 BOT = config.BOT_TOKEN
 
-class MyClient(discord.Client):
+class MyClient(commands.Bot):
+	def __init__(self, command_prefix, help_command):
+		self.bot = commands.Bot.__init__(self, command_prefix=command_prefix, help_command=help_command)
+
+	def role_embed(self):
+		embed = discord.Embed(title="Role Assign", desription="Get yourself a role", color= 0xFCBA03)
+		
+		roles = ["🐴","🐒","🦍","🤺"]
+		descs = ["Denchu", "Monke", "Benene", "Muh Rica"]
+
+		for i in range(len(roles)):
+			embed.add_field(name=roles[i],value=descs[i], inline=False)
+
+		return embed
+
+	async def reaction_menu(self, msg):
+		roles = ["🐴","🐒","🦍","🤺"]
+		for i in range(len(roles)):
+			await msg.add_reaction(roles[i])
+
 	async def on_ready(self):
+		channel = self.get_channel(976118948292620308)
 		print('logged in as {0}!'.format(self.user))
 		await self.change_presence(activity=discord.Activity(name=f"commands {config.PREFIX}", type=2))
+		msg = await channel.send(embed = self.role_embed())
+		await self.reaction_menu(msg)
 
-	async def on_message(self, message):
-		if message.author.bot:
+	async def on_reaction_add(self, reaction, user):
+		channel = self.get_channel(976118948292620308)
+		if reaction.message.channel.id != channel.id:
 			return
+		
+		switcher = {
+			"🐴": "Donkey",
+			"🐒": "Monkey",
+			"🦍": "Gorilla",
+			"🤺": "Human"
+		}
+		role = discord.utils.get(user.guild.roles , name=switcher.get(str(reaction.emoji)))
 
-		print('Message from {0.author}: {0.content}'.format(message))
-		channel = message.channel
-		await channel.send('{0.author.mention}: `{0.content}` in {0.channel.mention}'.format(message))
+		await user.add_roles(role)
+
+	async def on_reaction_remove(self, reaction, user):
+		channel = self.get_channel(976118948292620308)
+		if reaction.message.channel.id != channel.id:
+			return
+		
+		switcher = {
+			"🐴": "Donkey",
+			"🐒": "Monkey",
+			"🦍": "Gorilla",
+			"🤺": "Human"
+		}
+		role = discord.utils.get(user.guild.roles , name=switcher.get(str(reaction.emoji)))
+
+		if role in user.roles:
+			await user.remove_roles(role)
+		else:
+			await user.add_roles(role)
+
+		
+class PingCog(commands.Cog):
+	def __init__(self, bot):
+		self.bot = bot
+
+	@commands.command()
+	async def ping(self, ctx):
+		await ctx.send(f'Pong {round(self.bot.latency, 1)}')
 
 
-client = MyClient()
-
+client = MyClient(command_prefix=config.PREFIX, help_command=None)
+client.add_cog(PingCog(client))
+client.add_cog(TestCog(client))
 client.run(BOT)
