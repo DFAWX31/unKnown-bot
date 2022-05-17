@@ -36,6 +36,7 @@ class MyClient(commands.Bot):
 		await self.reaction_menu(msg)
 
 	async def on_reaction_add(self, reaction, user):
+		print("pls wiork")
 		channel = self.get_channel(976118948292620308)
 		if reaction.message.channel.id != channel.id:
 			return
@@ -50,7 +51,11 @@ class MyClient(commands.Bot):
 
 		await user.add_roles(role)
 
-	async def on_reaction_remove(self, reaction, user):
+	async def on_raw_reaction_removed(self, payload):
+		print("oksfdsfasdf")
+		reaction = payload.emoji
+		user = self.get_guild(payload.guild_id).get_member(payload.user_id)
+		
 		channel = self.get_channel(976118948292620308)
 		if reaction.message.channel.id != channel.id:
 			return
@@ -61,7 +66,7 @@ class MyClient(commands.Bot):
 			"🦍": "Gorilla",
 			"🤺": "Human"
 		}
-		role = discord.utils.get(user.guild.roles , name=switcher.get(str(reaction.emoji)))
+		role = discord.utils.get(self.get_guild(payload.guild_id).roles , name=switcher.get(str(reaction.emoji)))
 
 		if role in user.roles:
 			await user.remove_roles(role)
