@@ -3,11 +3,11 @@ from unicodedata import name
 import discord
 import config
 from bot_commands.test import TestCog
+from bot_commands.moderation import *
 
 from discord.ext import commands
 
 BOT = config.BOT_TOKEN
-
 class MyClient(commands.Bot):
 	def __init__(self, command_prefix, help_command):
 		self.bot = commands.Bot.__init__(self, command_prefix=command_prefix, help_command=help_command)
@@ -36,7 +36,6 @@ class MyClient(commands.Bot):
 		await self.reaction_menu(msg)
 
 	async def on_reaction_add(self, reaction, user):
-		print("pls wiork")
 		channel = self.get_channel(976118948292620308)
 		if reaction.message.channel.id != channel.id:
 			return
@@ -48,25 +47,6 @@ class MyClient(commands.Bot):
 			"🤺": "Human"
 		}
 		role = discord.utils.get(user.guild.roles , name=switcher.get(str(reaction.emoji)))
-
-		await user.add_roles(role)
-
-	async def on_raw_reaction_removed(self, payload):
-		print("oksfdsfasdf")
-		reaction = payload.emoji
-		user = self.get_guild(payload.guild_id).get_member(payload.user_id)
-		
-		channel = self.get_channel(976118948292620308)
-		if reaction.message.channel.id != channel.id:
-			return
-		
-		switcher = {
-			"🐴": "Donkey",
-			"🐒": "Monkey",
-			"🦍": "Gorilla",
-			"🤺": "Human"
-		}
-		role = discord.utils.get(self.get_guild(payload.guild_id).roles , name=switcher.get(str(reaction.emoji)))
 
 		if role in user.roles:
 			await user.remove_roles(role)
@@ -86,4 +66,5 @@ class PingCog(commands.Cog):
 client = MyClient(command_prefix=config.PREFIX, help_command=None)
 client.add_cog(PingCog(client))
 client.add_cog(TestCog(client))
+client.add_cog(AdminCog(client))
 client.run(BOT)
