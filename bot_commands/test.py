@@ -9,3 +9,4 @@ class TestCog(commands.Cog):
 	@commands.command()
 	async def test(self, ctx, *args):
 		await ctx.send('{} arguments: {}'.format(len(args), ' '.join(args)))
+		await ctx.author.send('{} arguments: {}'.format(len(args), ''.join(args)))
