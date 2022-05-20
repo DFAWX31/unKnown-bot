@@ -3,15 +3,16 @@ from unicodedata import name
 import discord
 import config
 from bot_commands.test import TestCog
-from bot_commands.moderation import *
+from bot_commands.moderation import AdminCog
+from bot_commands.currency import CurrencyCog
 
 from discord.ext import commands
 intents = discord.Intents.all()
 
 BOT = config.BOT_TOKEN
 class MyClient(commands.Bot):
-	def __init__(self, command_prefix, help_command,  intents):
-		self.bot = commands.Bot.__init__(self, command_prefix=command_prefix, help_command=help_command, intents=intents)
+	def __init__(self, command_prefix,  intents):
+		self.bot = commands.Bot.__init__(self, command_prefix=command_prefix, intents=intents)
 
 	# def role_embed(self):
 	# 	embed = discord.Embed(title="Role Assign", desription="Get yourself a role", color= 0xFCBA03)
@@ -64,8 +65,9 @@ class PingCog(commands.Cog):
 		await ctx.send(f'Pong {round(self.bot.latency, 1)}')
 
 
-client = MyClient(command_prefix=config.PREFIX, help_command=None, intents=intents)
+client = MyClient(command_prefix=config.PREFIX, intents=intents)
 client.add_cog(PingCog(client))
 client.add_cog(TestCog(client))
 client.add_cog(AdminCog(client))
+client.add_cog(CurrencyCog(client))
 client.run(BOT)

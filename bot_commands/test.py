@@ -10,3 +10,5 @@ class TestCog(commands.Cog):
 	async def test(self, ctx, *args):
 		await ctx.send('{} arguments: {}'.format(len(args), ' '.join(args)))
 		await ctx.author.send('{} arguments: {}'.format(len(args), ''.join(args)))
+		print(ctx.author.name + "#" + ctx.author.discriminator)
+		
