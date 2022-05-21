@@ -3,7 +3,6 @@ import json
 from config import response
 import discord
 from discord.ext import commands
-import pymongo
 
 json_data = json.loads(response.text)
 
@@ -26,16 +25,16 @@ class CurrencyCog(commands.Cog):
 		return replacement
 
 
-	def add_data(self, datas):
+	def add_data(self, datas, file):
 		replacement = self.find_replacement(datas)
 		text = "\t\t}\n"
-		with open('db.json', 'r') as f:
+		with open(file, 'r') as f:
 			filedata = f.read()
 			f.close()
 		
 		filedata = filedata.replace(text, replacement)
 
-		with open('db.json', 'w') as f:
+		with open(file, 'w') as f:
 			f.write(filedata)
 			f.close()			
 
@@ -47,9 +46,8 @@ class CurrencyCog(commands.Cog):
 			"room": "false"
 		}
 
-		self.add_data(datas)
+		file = 'db.json'
 
-		with open('db.json') as f:
-			print(f.readlines())
+		self.add_data(datas, file)
 
 		await ctx.send('help me pls')
