@@ -5,6 +5,7 @@ import config
 from bot_commands.test import TestCog
 from bot_commands.moderation import AdminCog
 from bot_commands.currency import CurrencyCog
+from bot_commands.anime import AnimeCommands
 
 from discord.ext import commands
 intents = discord.Intents.all()
@@ -35,4 +36,5 @@ client.add_cog(PingCog(client))
 client.add_cog(TestCog(client))
 client.add_cog(AdminCog(client))
 client.add_cog(CurrencyCog(client))
+client.add_cog(AnimeCommands(client))
 client.run(BOT)
