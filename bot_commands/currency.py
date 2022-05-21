@@ -38,19 +38,24 @@ class CurrencyCog(commands.Cog):
 
 	@commands.command(help="join the game")
 	async def join(self, ctx):
+		key = False
+
 		datas = {
 			"name": "\"" + str(ctx.author.id) +"\"",
 			"balance": 0,
 			"room": "false"
 		}
-		if json.loads(get_response(f'name={ctx.author.id}').text) != []:
+		if json.loads(get_response(f'name={ctx.author.id}').text) == []:
+			key = True
 			file = 'db.json'
 
 			self.add_data(datas, file)
 
 		json_data = json.loads(get_response(f"name={ctx.author.id}").text)
 
-		balance = json_data[0]
-
-		await ctx.send(f'{ctx.author} has joined with { balance }')
+		balance = json_data[0]['balance']
+		if key:
+			await ctx.send(f'{ctx.author.mention} has joined with { balance } ucoins')
+		else:
+			await ctx.send(f'{ctx.author.mention} has {balance} ucoins')
 
