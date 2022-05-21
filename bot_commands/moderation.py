@@ -43,6 +43,27 @@ class AdminCog(commands.Cog):
 			permissions = discord.Permissions(send_messages=False, add_reactions=False, connect=False, )
 			await ctx.guild.create_role(name='Muted', permissions=permissions, color=0xffffff)
 			muted = discord.utils.get(ctx.guild.roles, name='Muted')
+			rules = {
+				muted: discord.PermissionOverwrite(read_messages=False, send_messages=False, connect=False, read_message_history=False, )
+			}
+			
+			for category in ctx.guild.categories:
+				print(category.name)
+				await category.edit(overwrites=rules)
+				for channel in category.channels:
+					await channel.edit(overwrites=rules)
+			rules = {
+				muted: discord.PermissionOverwrite(read_messages=True, send_messages=True, read_message_history=True, connect=True)
+			}
+			for role in ctx.guild.roles:
+				print(role.name)
+				if role != muted:
+					rules.update({role: discord.PermissionOverwrite(read_messages=False, send_messages=False, connect=False, read_message_history=False)})
+			category = await ctx.guild.create_category(name="muted", overwrites = rules)
+			await category.create_text_channel(name="muted-chat", overwrites = rules)
+			await category.create_voice_channel(name="muted-voice", overwrites = rules)
+
+				
 		
 		pos = {
 			muted: 1,

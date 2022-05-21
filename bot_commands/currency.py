@@ -1,10 +1,8 @@
 from urllib import response
 import json
-from config import response
+from config import get_response
 import discord
 from discord.ext import commands
-
-json_data = json.loads(response.text)
 
 class CurrencyCog(commands.Cog):
 	def __init__(self, bot):
@@ -41,13 +39,18 @@ class CurrencyCog(commands.Cog):
 	@commands.command(help="join the game")
 	async def join(self, ctx):
 		datas = {
-			"name": "\"" +ctx.author.name+"#"+ctx.author.discriminator +"\"",
-			"amount": 0,
+			"name": "\"" + str(ctx.author.id) +"\"",
+			"balance": 0,
 			"room": "false"
 		}
+		if json.loads(get_response(f'name={ctx.author.id}').text) != []:
+			file = 'db.json'
 
-		file = 'db.json'
+			self.add_data(datas, file)
 
-		self.add_data(datas, file)
+		json_data = json.loads(get_response(f"name={ctx.author.id}").text)
 
-		await ctx.send('help me pls')
+		balance = json_data[0]
+
+		await ctx.send(f'{ctx.author} has joined with { balance }')
+
