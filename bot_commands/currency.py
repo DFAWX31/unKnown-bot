@@ -3,7 +3,8 @@ from distutils.command.config import config
 from locale import currency
 from urllib import response
 import json
-from config import get_response, secret_code, file
+from config import get_response, secret_code
+from config import currency as file
 import discord
 from discord.ext import commands
 
