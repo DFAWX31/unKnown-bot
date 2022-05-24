@@ -1,35 +1,34 @@
 import asyncio
 from dataclasses import dataclass
-import json
 import aiohttp
 from async_timeout import timeout
-from datetime import datetime, timedelta
+from datetime import datetime
 
 BASE_URL = 'https://www.reddit.com'
 SUBREDDIT_URL = BASE_URL + '/r/'
 REDDITOR_URL = BASE_URL + '/u/'
 JSON_URL = '/about.json'
 
-class Client:
-	def __init_(self, *, loop=None, session=None):
+class RedditClient:
+	def __init__(self, *, loop=None, session=None):
 		self.log_in = None
 		self.loop = loop or asyncio.get_event_loop()
 		self.session = session or aiohttp.ClientSession(loop=self.loop)
 
-	def error_detected(self, data):
+	def error_detector(self, data):
 		if "error" in data:
-			return data['error']
+			return data["error"]
 
-	async def get_header(self):
+	async def get_headers(self):
 		if not self.log_in:
 			return {}
 		else:
 			raise NotImplementedError
-	
+
 	async def fetch(self, url):
 		try:
 			async with timeout(30.0):
-				headers = await self.get_header()
+				headers = await self.get_headers()
 
 				async with self.session.get(url, headers=headers) as resp:
 					if resp.status != 200:
@@ -37,13 +36,37 @@ class Client:
 
 					data = await resp.json()
 
-		except TimeoutError:
-			raise TimeoutError(f'Timed out while fetching \'{url}\'')
+		except asyncio.TimeoutError:
+			raise asyncio.TimeoutError(f"Timed out while fetching '{url}'")
 
-		if self.error_detected(data):
+		if self.error_detector(data):
 			return None
 
 		return data
+
+	async def fetch_subreddit(self, query):
+		url = SUBREDDIT_URL + query + JSON_URL
+
+		data = await self.fetch(url)
+
+		if data["kind"] != "t5":
+			return None
+
+		subreddit = Subreddit(data)
+
+		return subreddit
+
+	async def fetch_redditor(self, query):
+		url = REDDITOR_URL + query + JSON_URL
+
+		data = await self.fetch(url)
+
+		if data["kind"] != "t2":
+			return None
+
+		redditor = Redditor(data)
+
+		return redditor
 
 	async def get_posts(self, subreddit, query):
 		url = SUBREDDIT_URL + subreddit + '/' + query + '/.json'
@@ -57,29 +80,6 @@ class Client:
 
 		return posts
 
-	async def fetch_subreddit(self, query):
-		url = SUBREDDIT_URL + query + JSON_URL
-
-		data = await self.fetch(url)
-
-		if data['kind'] != 't5':
-			return None
-
-		subreddit = Subreddit(data)
-
-		return subreddit
-
-	async def fetch_redditor(self, query):
-		url = REDDITOR_URL + query + JSON_URL
-
-		data = await self.fetch(url)
-
-		if data['kind'] != 't2':
-			return None
-
-		redditor = Redditor(data)
-
-		return redditor
 
 class Redditor:
 	def __init__(self, data):
@@ -123,6 +123,7 @@ class Subreddit:
 class Posts:
 	def __init__(self, data):
 		data = data['data']
+		self.data = data
 		self.posts = []
 		for child in data['children']:
 			val = child['data']
@@ -131,6 +132,10 @@ class Posts:
 					'post': val['url'],
 					'title': val['title'],
 					'author': val['author'],
-					'link': SUBREDDIT_URL + val['premalink']
+					'content': val['selftext'],
+					'link': SUBREDDIT_URL + str(val['permalink'])
 				}
 				self.posts.append(datas)
+
+	def __str__(self):
+		return self.posts[0]['link']

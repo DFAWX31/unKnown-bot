@@ -1,14 +1,21 @@
+from dis import disco
+from socket import timeout
 from tabnanny import check
 import discord
-from discord.ext import commands
-from config import reactions, reddit, get_reddit_server, get_reddit_user
+from discord.ext import commands, tasks
+from config import reactions, reddit, get_reddit_server, get_reddit_user, get_prev_data
 import json
-import bot_commands.reddit.redditfetcher as reddit_fetcher
+from bot_commands.reddit.redditfetcher import RedditClient
+from bot_commands.reddit.timeoutreddit import Send_again
+send_red = Send_again()
+
+reddit_fetcher = RedditClient()
+
 
 class SubReddit(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
-	
+
 	@commands.command(name="reddit", help="initialize subreddit to a channel")
 	@commands.has_permissions(manage_messages=True)
 	async def _reddit(self, ctx, channel : discord.channel = None):
@@ -72,3 +79,35 @@ class SubReddit(commands.Cog):
 
 		await ctx.send(f'You have chosen to send r/{sub.content}\'s {type} channel\'s data to {ctx.channel.mention}')
 
+		postObj = await reddit_fetcher.get_posts(sub.content, type)
+		posts = postObj.posts
+
+		prev = {
+			'server': str(ctx.guild.id),
+			'channel': str(ctx.channel.id),
+			'posts': posts,
+			'sub': sub.content,
+			'type': type
+		}
+
+		self.repeated.start(str(ctx.guild.id), str(channel.id), str(sub.content), str(type))
+	
+
+	@tasks.loop(minutes=30.0)
+	async def repeated(self, server, channel, sub, type):
+		json_data = json.loads(get_prev_data(f'server={server}&channel={channel}').text)
+		new_posts = []
+		
+		postObj = await reddit_fetcher.get_posts(sub, type)
+		new_posts = postObj.posts
+		
+		with open(reddit) as json_file:
+			red = json.load(json_file)
+			red['prev-data'].append(new_posts)
+		
+		with open(reddit, 'w') as json_file:
+			json.dump(red, json_file)
+		
+		for post in json_data['posts']:
+			await send_red.timeinterval(post, json_data['channel'], json_data['server'])
+		
