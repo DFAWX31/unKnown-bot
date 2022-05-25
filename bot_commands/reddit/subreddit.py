@@ -1,6 +1,4 @@
-from dis import disco
 from socket import timeout
-from tabnanny import check
 import discord
 from discord.ext import commands, tasks
 from config import reactions, reddit, get_reddit_server, get_reddit_user, get_prev_data
@@ -15,6 +13,19 @@ reddit_fetcher = RedditClient()
 class SubReddit(commands.Cog):
 	def __init__(self, bot):
 		self.bot = bot
+
+	async def get_subred(self,ctx, check):
+		content = await self.bot.wait_for('message', check=check, timeout=10.0)
+		
+		sub = await reddit_fetcher.fetch_subreddit(str(content.content))
+		
+		if not sub:
+			await ctx.send('Please enter a valid subreddit name')
+			
+			content = await self.get_subred(ctx, check)
+
+		return content
+		
 
 	@commands.command(name="reddit", help="initialize subreddit to a channel")
 	@commands.has_permissions(manage_messages=True)
@@ -34,10 +45,8 @@ class SubReddit(commands.Cog):
 		def check(ct):
 			return ct.author == ctx.author and ct.channel == ctx.channel
 
-		sub = None
-
 		try:
-			sub = await self.bot.wait_for('message', check=check, timeout=10.0)
+			sub = await self.get_subred(ctx, check)
 		except:
 			return await ctx.send('Message timed out(10s)')
 		datas['subreddit'] = str(sub.content)
@@ -134,4 +143,3 @@ class SubReddit(commands.Cog):
 			json_file.close()
 
 		await send_red.timeinterval(posts, channel, server)
-		
