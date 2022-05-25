@@ -6,24 +6,21 @@ class Send_again:
 		url = post['link']
 		content = post['content']
 		if content != '':
-			embed = discord.Embed(title=f'post by {user}', url = url, description=content, color=0xff4500)
+			embed = discord.Embed(title=f'post by {user}', url = url, description=content, color=discord.Color.from_rgb(255,69,0))
 		else:
-			embed = discord.Embed(title=f'post by {user}', url = url, color=0xff45000)
+			embed = discord.Embed(title=f'post by {user}', url = url, color=discord.Color.from_rgb(255,69,0))
 		if post['post'] != '':
 			embed.set_image(url=post['post'])
-		embed.set_footer('next update in 30 mins')
+		embed.set_footer(text='next update in 30 mins')
 
-	async def timeinterval(self, posts, channel :int, server :int):
-		try:
-			guild = self.bot.get_guild(str(server))
-			channel = self.bot.get_channel(str(channel))
-		except:
-			return print('channel/ guild not found')
-		if guild == None:
+		return embed
+
+	async def timeinterval(self, posts, channel, server):
+		if not server:
 			return print('guild not found')
-		if channel == None:
+		if not channel:
 			return print('channel not found')
-		if channel not in guild.channels:
+		if channel not in server.channels:
 			return print('specified channel is not in guild')
 		for post in posts:
 			await channel.send(embed=self.reddit_embed(post))

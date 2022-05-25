@@ -133,7 +133,7 @@ class Posts:
 					'title': val['title'],
 					'author': val['author'],
 					'content': val['selftext'],
-					'link': SUBREDDIT_URL + str(val['permalink'])
+					'link': BASE_URL + str(val['permalink'])
 				}
 				self.posts.append(datas)
 

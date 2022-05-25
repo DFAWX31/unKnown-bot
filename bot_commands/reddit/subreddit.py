@@ -89,25 +89,49 @@ class SubReddit(commands.Cog):
 			'sub': sub.content,
 			'type': type
 		}
+		
+		with open(reddit) as json_file:
+			red = json.load(json_file)
+			red['prev-data'].append(prev)
+			json_file.close()
+		
+		with open(reddit, 'w') as json_file:
+			json.dump(red, json_file)
+			json_file.close()
 
-		self.repeated.start(str(ctx.guild.id), str(channel.id), str(sub.content), str(type))
+		await send_red.timeinterval(prev['posts'], channel, ctx.guild)
+
+		self.repeated.start(ctx.guild, channel, str(sub.content), str(type))
 	
 
 	@tasks.loop(minutes=30.0)
 	async def repeated(self, server, channel, sub, type):
-		json_data = json.loads(get_prev_data(f'server={server}&channel={channel}').text)
+		json_data = json.loads(get_prev_data(f'server={server.id}&channel={channel.id}').text)
 		new_posts = []
-		
+
 		postObj = await reddit_fetcher.get_posts(sub, type)
-		new_posts = postObj.posts
-		
+		posts = postObj.posts
+
+		for post in json_data[0]['posts']:
+			if posts[0] != post:
+				if post in posts:
+					break
+			new_posts.append(post)
+
 		with open(reddit) as json_file:
 			red = json.load(json_file)
-			red['prev-data'].append(new_posts)
+		
+		for data in red['prev-data']:
+			if data['channel'] == str(channel.id) and data['server'] == str(server.id):
+				changer = data
+				break
+		
+		changer['posts'] = new_posts
+		json_file.close()
 		
 		with open(reddit, 'w') as json_file:
 			json.dump(red, json_file)
-		
-		for post in json_data['posts']:
-			await send_red.timeinterval(post, json_data['channel'], json_data['server'])
+			json_file.close()
+
+		await send_red.timeinterval(posts, channel, server)
 		
