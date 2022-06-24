@@ -5,4 +5,4 @@ the repo for the unknonwnBot
 uses discord.py 1.7 and not 2.0 and will be updated soon™. 
 
 # Update
-soon™ has arrived and this bot is being redone in py-cord.
+development skipped again because I thought of another project to do.
